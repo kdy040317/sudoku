@@ -1,0 +1,1043 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>아홉 칸 스도쿠</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --surface: #ffffff;
+    --text: #1e2433;
+    --muted: #6b7385;
+    --line: #cdd4e1;
+    --line-strong: #39445a;
+    --given: #1e2433;
+    --user: #2f63d6;
+    --related: #e7edf8;
+    --same: #c8d8f6;
+    --selected: #a9c4f5;
+    --error: #d92f45;
+    --error-bg: #fde2e6;
+    --accent: #2f63d6;
+    --accent-contrast: #ffffff;
+    --btn: #e9edf5;
+    --btn-hover: #dde3ef;
+    --shadow: 0 8px 30px rgba(30, 36, 51, .08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11141b;
+      --surface: #1a1e28;
+      --text: #e6e9f0;
+      --muted: #8b93a6;
+      --line: #313848;
+      --line-strong: #8b93a6;
+      --given: #e6e9f0;
+      --user: #7ea7ff;
+      --related: #222938;
+      --same: #2c3a5a;
+      --selected: #39528c;
+      --error: #ff6b7b;
+      --error-bg: #4a1f27;
+      --accent: #5b8cff;
+      --accent-contrast: #0d1220;
+      --btn: #252b39;
+      --btn-hover: #2e3546;
+      --shadow: 0 8px 30px rgba(0, 0, 0, .35);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11141b;
+    --surface: #1a1e28;
+    --text: #e6e9f0;
+    --muted: #8b93a6;
+    --line: #313848;
+    --line-strong: #8b93a6;
+    --given: #e6e9f0;
+    --user: #7ea7ff;
+    --related: #222938;
+    --same: #2c3a5a;
+    --selected: #39528c;
+    --error: #ff6b7b;
+    --error-bg: #4a1f27;
+    --accent: #5b8cff;
+    --accent-contrast: #0d1220;
+    --btn: #252b39;
+    --btn-hover: #2e3546;
+    --shadow: 0 8px 30px rgba(0, 0, 0, .35);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button, select { font: inherit; color: inherit; }
+  button { cursor: pointer; border: 0; background: var(--btn); border-radius: 10px; }
+  button:hover:not(:disabled) { background: var(--btn-hover); }
+  button:disabled { opacity: .35; cursor: default; }
+  button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .hidden, [hidden] { display: none !important; }
+
+  .start { min-height: min(760px, 88vh); display: flex; align-items: center; justify-content: center; }
+  .start-card { width: min(440px, 100%); display: grid; gap: 14px; text-align: center; }
+  .start-mark {
+    display: grid; grid-template-columns: repeat(3, 46px); margin: 0 auto 6px;
+    border: 2px solid var(--line-strong); border-radius: 10px; overflow: hidden;
+    background: var(--surface); box-shadow: var(--shadow);
+  }
+  .start-mark span {
+    height: 46px; display: flex; align-items: center; justify-content: center;
+    border-right: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    font-size: 1.25rem; font-weight: 600; color: var(--given);
+  }
+  .start-mark span:nth-child(3n) { border-right: 0; }
+  .start-mark span:nth-child(n+7) { border-bottom: 0; }
+  .start-mark span.u { color: var(--user); font-weight: 400; background: var(--selected); }
+  .start h1 { margin: 0; font-size: 2rem; letter-spacing: -.03em; text-wrap: balance; }
+  .start-sub { margin: 0 0 8px; color: var(--muted); line-height: 1.55; text-wrap: balance; }
+  .diff-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .diff-opt {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+    padding: 14px 16px; text-align: left;
+    background: var(--surface); border: 2px solid var(--line); border-radius: 12px;
+  }
+  .diff-opt:hover:not(:disabled) { background: var(--surface); border-color: var(--line-strong); }
+  .diff-opt[aria-checked="true"], .diff-opt[aria-checked="true"]:hover { border-color: var(--accent); background: var(--related); }
+  .diff-opt strong { font-size: 1.05rem; }
+  .diff-opt small { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
+  .big { padding: 14px; font-size: 1.05rem; border-radius: 12px; }
+  .linkish { background: transparent; color: var(--muted); padding: 6px; text-decoration: underline; text-underline-offset: 3px; }
+  .linkish:hover:not(:disabled) { background: transparent; color: var(--text); }
+
+  .app {
+    max-width: 960px; margin: 0 auto; padding-block: 16px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .top h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.02em; }
+  .top-actions { display: flex; gap: 8px; align-items: center; }
+  select { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  .primary { background: var(--accent); color: var(--accent-contrast); padding: 9px 16px; font-weight: 600; }
+  .primary:hover:not(:disabled) { background: var(--accent); filter: brightness(1.08); }
+  .icon { width: 40px; height: 40px; font-size: 1.15rem; display: inline-flex; align-items: center; justify-content: center; }
+  .icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .icon.primary { padding: 0; }
+  #soundBtn .snd-off, #soundBtn.muted .snd-on { display: none; }
+  #soundBtn.muted .snd-off { display: inline; }
+  #soundBtn.muted { color: var(--muted); }
+  .icon.small { width: 30px; height: 30px; font-size: .85rem; border-radius: 8px; }
+
+  .game { display: grid; gap: 20px; }
+  @media (min-width: 820px) {
+    .game { grid-template-columns: minmax(0, 540px) 1fr; align-items: start; }
+  }
+
+  .status { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: .92rem; margin-bottom: 8px; min-height: 30px; }
+  .status .timer { display: inline-flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; color: var(--text); }
+  #mistakes.warn { color: var(--error); }
+
+  .board-box { position: relative; }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    aspect-ratio: 1;
+    width: 100%;
+    background: var(--surface);
+    border: 2px solid var(--line-strong);
+    border-radius: 10px;
+    overflow: hidden;
+    container-type: inline-size;
+    user-select: none;
+    box-shadow: var(--shadow);
+  }
+  .board.blur { filter: blur(8px); }
+  .cell {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    font-size: 6.4cqw;
+    cursor: pointer;
+    transition: background-color .08s;
+  }
+  .cell.c8 { border-right: 0; }
+  .cell.r8 { border-bottom: 0; }
+  .cell.bc { border-right: 2px solid var(--line-strong); }
+  .cell.br { border-bottom: 2px solid var(--line-strong); }
+  .cell.given { color: var(--given); font-weight: 600; }
+  .cell.user { color: var(--user); }
+  .cell.related { background: var(--related); }
+  .cell.same { background: var(--same); }
+  .cell.selected { background: var(--selected); }
+  .cell.conflict { background: var(--error-bg); }
+  .cell.error { color: var(--error); }
+  .cell.error:not(.selected) { background: var(--error-bg); }
+  .cell.flash { animation: flash .75s ease-out; }
+  .cell.shake .v { display: inline-block; animation: shake .35s; }
+  @keyframes flash { 0% { background: var(--accent); color: var(--accent-contrast); } }
+  @keyframes shake { 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
+
+  .notes {
+    position: absolute; inset: 1px;
+    display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+    font-size: 2.4cqw; color: var(--muted); font-weight: 500;
+  }
+  .notes span { display: flex; align-items: center; justify-content: center; border-radius: 4px; }
+  .notes span.hl { background: var(--accent); color: var(--accent-contrast); }
+
+  .overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 10px; font-weight: 600; color: var(--text);
+  }
+  .overlay button { padding: 12px 22px; background: var(--accent); color: var(--accent-contrast); font-weight: 600; }
+
+  .panel { display: grid; gap: 16px; }
+  @media (min-width: 820px) { .panel { padding-top: 38px; } }
+  .tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .tool {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 10px 2px; background: transparent; font-size: .78rem; color: var(--muted);
+  }
+  .tool .ti {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--btn); font-size: 1.25rem; color: var(--text);
+  }
+  .tool:hover:not(:disabled) { background: transparent; }
+  .tool:hover:not(:disabled) .ti { background: var(--btn-hover); }
+  .tool.on .ti { background: var(--accent); color: var(--accent-contrast); }
+  .tool b { color: var(--text); }
+
+  .numpad { display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; }
+  @media (min-width: 820px) { .numpad { grid-template-columns: repeat(3, 1fr); gap: 8px; } }
+  .num {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 8px 0; min-height: 56px; background: var(--surface); box-shadow: var(--shadow);
+    color: var(--user);
+  }
+  @media (min-width: 820px) { .num { min-height: 76px; } }
+  .num span { font-size: 1.7rem; line-height: 1; }
+  .num small { font-size: .7rem; color: var(--muted); margin-top: 3px; }
+  .numpad.notes-mode .num span { font-size: 1.15rem; color: var(--muted); }
+  .keys { margin: 0; font-size: .78rem; color: var(--muted); line-height: 1.6; }
+  @media (max-width: 819px) { .keys { display: none; } }
+
+  .modal {
+    position: fixed; inset: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(10, 12, 18, .45); padding: 16px;
+  }
+  .dialog {
+    width: min(420px, 100%); max-height: 90vh; overflow: auto;
+    background: var(--surface); border-radius: 16px; padding: 22px; box-shadow: var(--shadow);
+  }
+  .dialog h2 { margin: 0 0 10px; font-size: 1.25rem; }
+  .dialog p { margin: 6px 0; color: var(--muted); line-height: 1.5; }
+  .dialog .buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; flex-wrap: wrap; }
+  .dialog .buttons button { padding: 9px 16px; }
+  .setting { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .setting input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); }
+  .stats { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: .9rem; font-variant-numeric: tabular-nums; }
+  .stats th, .stats td { padding: 6px 4px; text-align: center; border-bottom: 1px solid var(--line); }
+  .stats th { color: var(--muted); font-weight: 500; }
+  .big-time { font-size: 2rem; font-weight: 700; color: var(--text); margin: 8px 0; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="app">
+  <section id="startScreen" class="start">
+    <div class="start-card">
+      <div class="start-mark" aria-hidden="true">
+        <span>5</span><span>3</span><span></span>
+        <span>6</span><span class="u">7</span><span></span>
+        <span></span><span>9</span><span>8</span>
+      </div>
+      <h1>아홉 칸 스도쿠</h1>
+      <p class="start-sub">가로줄, 세로줄, 3×3 박스마다 1부터 9까지 한 번씩 채우면 완성이에요.</p>
+      <div id="diffOptions" class="diff-list" role="radiogroup" aria-label="난이도"></div>
+      <button id="startBtn" class="primary big">시작하기</button>
+      <button id="resumeBtn2" class="big" hidden></button>
+      <button id="startSettings" class="linkish">설정 및 기록</button>
+    </div>
+  </section>
+
+  <div id="gameScreen" hidden>
+  <header class="top">
+    <h1>아홉 칸 스도쿠</h1>
+    <div class="top-actions">
+      <button id="soundBtn" class="icon" aria-label="효과음" title="효과음 켜기/끄기">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><g class="snd-on"><path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a7.5 7.5 0 0 1 0 11"/></g><g class="snd-off"><path d="m16 9.5 5 5"/><path d="m21 9.5-5 5"/></g></svg>
+      </button>
+      <button id="homeBtn" class="icon" aria-label="홈" title="홈">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9v11h13V9"/><path d="M10 20v-6h4v6"/></svg>
+      </button>
+      <button id="newGame" class="icon primary" aria-label="새 게임" title="새 게임 (같은 난이도)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>
+      </button>
+      <button id="settingsBtn" class="icon" aria-label="설정 및 기록" title="설정 및 기록">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1.1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="game">
+    <section>
+      <div class="status">
+        <span id="diffLabel"></span>
+        <span id="mistakes"></span>
+        <span class="timer"><span id="timer">00:00</span><button id="pauseBtn" class="icon small" aria-label="일시정지">❚❚</button></span>
+      </div>
+      <div class="board-box">
+        <div id="board" class="board" role="grid" aria-label="스도쿠 보드"></div>
+        <div id="pauseOverlay" class="overlay hidden"><button id="resumeBtn">▶ 계속하기</button></div>
+        <div id="loading" class="overlay hidden">퍼즐 생성 중…</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="tools">
+        <button class="tool" id="undoBtn" title="실행 취소 (Ctrl+Z)"><span class="ti">↶</span><span>실행 취소</span></button>
+        <button class="tool" id="eraseBtn" title="지우기 (Backspace)"><span class="ti">⌫</span><span>지우기</span></button>
+        <button class="tool" id="notesBtn" title="메모 모드 (N)"><span class="ti">✎</span><span>메모 <b id="notesState">OFF</b></span></button>
+        <button class="tool" id="hintBtn" title="힌트"><span class="ti">💡</span><span>힌트 <b id="hintCount">3</b></span></button>
+      </div>
+      <div id="numpad" class="numpad"></div>
+      <p class="keys">키보드: 1–9 입력 · Shift+숫자 메모 · 방향키 이동 · Backspace 지우기 · N 메모 모드 · Ctrl+Z 실행 취소 · P 일시정지</p>
+    </section>
+  </main>
+  </div>
+</div>
+
+<div id="modal" class="modal hidden">
+  <div class="dialog" role="dialog" aria-modal="true">
+    <h2 id="modalTitle"></h2>
+    <div id="modalBody"></div>
+    <div id="modalButtons" class="buttons"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (s) => document.querySelector(s);
+
+  const DIFFS = {
+    easy:   { label: '쉬움',   clues: 40 },
+    medium: { label: '보통',   clues: 33 },
+    hard:   { label: '어려움', clues: 28 },
+    expert: { label: '전문가', clues: 24 },
+  };
+  const MAX_MISTAKES = 3;
+  const MAX_HINTS = 3;
+  const SAVE_KEY = 'sudoku.save.v1';
+  const SET_KEY = 'sudoku.settings.v1';
+  const STAT_KEY = 'sudoku.stats.v1';
+
+  // ---------- storage ----------
+  function load(key) { try { return JSON.parse(localStorage.getItem(key)) || null; } catch { return null; } }
+  function store(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* ignore */ } }
+  function remove(key) { try { localStorage.removeItem(key); } catch { /* ignore */ } }
+
+  // ---------- geometry ----------
+  const rowOf = (i) => (i / 9) | 0;
+  const colOf = (i) => i % 9;
+  const boxOf = (i) => ((i / 27) | 0) * 3 + (((i % 9) / 3) | 0);
+  const PEERS = [];
+  const PEER_SET = [];
+  for (let i = 0; i < 81; i++) {
+    const p = [];
+    for (let j = 0; j < 81; j++) {
+      if (j !== i && (rowOf(j) === rowOf(i) || colOf(j) === colOf(i) || boxOf(j) === boxOf(i))) p.push(j);
+    }
+    PEERS.push(p);
+    PEER_SET.push(new Set(p));
+  }
+  const UNITS = [];
+  for (let k = 0; k < 9; k++) {
+    const r = [], c = [], b = [];
+    for (let i = 0; i < 81; i++) {
+      if (rowOf(i) === k) r.push(i);
+      if (colOf(i) === k) c.push(i);
+      if (boxOf(i) === k) b.push(i);
+    }
+    UNITS.push(r, c, b);
+  }
+
+  // ---------- solver / generator ----------
+  const popcount = (m) => { let c = 0; while (m) { m &= m - 1; c++; } return c; };
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+
+  // Bitmask backtracking with "fewest candidates first". Stops after `limit` solutions.
+  function solve(grid, limit, randomize) {
+    const g = grid.slice();
+    const rows = new Array(9).fill(0), cols = new Array(9).fill(0), boxes = new Array(9).fill(0);
+    for (let i = 0; i < 81; i++) {
+      const v = g[i];
+      if (!v) continue;
+      const bit = 1 << v;
+      if ((rows[rowOf(i)] | cols[colOf(i)] | boxes[boxOf(i)]) & bit) return { count: 0, solution: null };
+      rows[rowOf(i)] |= bit; cols[colOf(i)] |= bit; boxes[boxOf(i)] |= bit;
+    }
+    let count = 0, first = null;
+    (function rec() {
+      let best = -1, bestMask = 0, bestCnt = 10;
+      for (let i = 0; i < 81; i++) {
+        if (g[i]) continue;
+        const m = ~(rows[rowOf(i)] | cols[colOf(i)] | boxes[boxOf(i)]) & 0x3fe;
+        const c = popcount(m);
+        if (c < bestCnt) { best = i; bestMask = m; bestCnt = c; if (c <= 1) break; }
+      }
+      if (best < 0) { count++; if (!first) first = g.slice(); return; }
+      if (bestCnt === 0) return;
+      const digits = [];
+      for (let d = 1; d <= 9; d++) if (bestMask & (1 << d)) digits.push(d);
+      if (randomize) shuffle(digits);
+      const r = rowOf(best), c = colOf(best), b = boxOf(best);
+      for (const d of digits) {
+        const bit = 1 << d;
+        g[best] = d; rows[r] |= bit; cols[c] |= bit; boxes[b] |= bit;
+        rec();
+        g[best] = 0; rows[r] &= ~bit; cols[c] &= ~bit; boxes[b] &= ~bit;
+        if (count >= limit) return;
+      }
+    })();
+    return { count, solution: first };
+  }
+
+  function generate(diff) {
+    const solution = solve(new Array(81).fill(0), 1, true).solution;
+    const puzzle = solution.slice();
+    const target = DIFFS[diff].clues;
+    let clues = 81;
+    for (const i of shuffle([...Array(81).keys()])) {
+      if (clues <= target) break;
+      const v = puzzle[i];
+      puzzle[i] = 0;
+      if (solve(puzzle, 2, false).count !== 1) puzzle[i] = v;
+      else clues--;
+    }
+    return { puzzle, solution };
+  }
+
+  // ---------- state ----------
+  let S = null;
+  let sel = -1;
+  let notesMode = false;
+  let paused = false;
+  let onStart = true;
+  let chosenDiff = 'medium';
+  const fx = new Map(); // cell index -> transient class
+  const settings = Object.assign({
+    errorMode: 'error',       // 'error' | 'conflict' | 'none'
+    mistakeLimit: true,
+    highlightSame: true,
+    highlightRelated: true,
+    autoRemoveNotes: true,
+    sound: true,
+    theme: 'auto',
+  }, load(SET_KEY) || {});
+  const stats = load(STAT_KEY) || {};
+
+  // ---------- sound effects (synthesized with Web Audio, no files) ----------
+  const Sound = (() => {
+    let ctx = null, master = null, noiseBuf = null;
+    function ensure() {
+      if (!ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        ctx = new AC();
+        master = ctx.createGain();
+        master.gain.value = 0.6;
+        master.connect(ctx.destination);
+      }
+      if (ctx.state === 'suspended') ctx.resume();
+      return ctx;
+    }
+    function tone(freq, start, dur, { type = 'sine', gain = 0.2, attack = 0.005, slideTo = 0 } = {}) {
+      const t = ctx.currentTime + start;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(freq, t);
+      if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(gain, t + attack);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(master);
+      o.start(t); o.stop(t + dur + 0.02);
+    }
+    function noise(start, dur, { gain = 0.1, freq = 3000, slideTo = 0 } = {}) {
+      if (!noiseBuf) {
+        noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.5, ctx.sampleRate);
+        const data = noiseBuf.getChannelData(0);
+        for (let k = 0; k < data.length; k++) data[k] = Math.random() * 2 - 1;
+      }
+      const t = ctx.currentTime + start;
+      const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      src.buffer = noiseBuf;
+      f.type = 'bandpass'; f.Q.value = 1.2;
+      f.frequency.setValueAtTime(freq, t);
+      if (slideTo) f.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+      g.gain.setValueAtTime(gain, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(f); f.connect(g); g.connect(master);
+      src.start(t); src.stop(t + dur + 0.02);
+    }
+    const arp = (freqs, step, dur, opts) => freqs.forEach((f, k) => tone(f, k * step, dur, opts));
+    const sfx = {
+      select: () => tone(1100, 0, 0.035, { type: 'triangle', gain: 0.04 }),
+      click:  () => tone(700, 0, 0.04, { type: 'triangle', gain: 0.07 }),
+      // pencil tap on paper
+      note:   () => noise(0, 0.04, { freq: 5000, gain: 0.12 }),
+      // wooden "pop" of a tile dropping in
+      place:  () => { tone(620, 0, 0.13, { type: 'triangle', gain: 0.22, slideTo: 520 }); tone(1240, 0, 0.06, { gain: 0.05 }); },
+      error:  () => { tone(170, 0, 0.25, { type: 'sawtooth', gain: 0.09, slideTo: 110 }); tone(180, 0, 0.25, { type: 'square', gain: 0.04, slideTo: 115 }); },
+      // eraser swipe
+      erase:  () => noise(0, 0.14, { freq: 1800, slideTo: 600, gain: 0.16 }),
+      undo:   () => { tone(760, 0, 0.06, { type: 'triangle', gain: 0.1 }); tone(540, 0.05, 0.09, { type: 'triangle', gain: 0.1 }); },
+      unit:   () => arp([523.25, 659.25, 783.99, 1046.5], 0.06, 0.32, { type: 'triangle', gain: 0.14 }),
+      hint:   () => arp([1318.5, 1568, 2093, 2637], 0.045, 0.28, { gain: 0.07 }),
+      start:  () => { tone(523.25, 0, 0.12, { type: 'triangle', gain: 0.14 }); tone(783.99, 0.09, 0.22, { type: 'triangle', gain: 0.14 }); },
+      win:    () => {
+        arp([392, 523.25, 659.25, 783.99], 0.12, 0.3, { type: 'triangle', gain: 0.16 });
+        [523.25, 659.25, 783.99, 1046.5].forEach((f) => tone(f, 0.55, 1.2, { type: 'triangle', gain: 0.1, attack: 0.02 }));
+      },
+      lose:   () => arp([392, 349.23, 311.13, 233.08], 0.2, 0.45, { type: 'triangle', gain: 0.14 }),
+    };
+    return {
+      play(name) {
+        if (!settings.sound || !ensure()) return;
+        try { sfx[name](); } catch { /* audio is optional */ }
+      },
+      unlock() { if (settings.sound) ensure(); },
+    };
+  })();
+  ['pointerdown', 'keydown'].forEach((ev) => document.addEventListener(ev, () => Sound.unlock(), { capture: true }));
+
+  const canAct = () => S && !S.done && !S.lost && !paused && !onStart;
+  const isLocked = (i) => !!S.puzzle[i] || (settings.errorMode === 'error' && S.values[i] === S.solution[i]);
+
+  function save() { if (S) store(SAVE_KEY, S); }
+
+  // ---------- board DOM ----------
+  const boardEl = $('#board');
+  const cells = [];
+  for (let i = 0; i < 81; i++) {
+    const el = document.createElement('div');
+    const r = rowOf(i), c = colOf(i);
+    let base = 'cell';
+    if (c === 8) base += ' c8'; else if (c % 3 === 2) base += ' bc';
+    if (r === 8) base += ' r8'; else if (r % 3 === 2) base += ' br';
+    el._base = base;
+    el._html = null;
+    el.setAttribute('role', 'gridcell');
+    el.addEventListener('pointerdown', () => {
+      if (!S || paused) return;
+      if (sel !== i) Sound.play('select');
+      sel = i;
+      render();
+    });
+    boardEl.appendChild(el);
+    cells.push(el);
+  }
+
+  const numpadEl = $('#numpad');
+  const numBtns = [];
+  for (let d = 1; d <= 9; d++) {
+    const b = document.createElement('button');
+    b.className = 'num';
+    b.innerHTML = `<span>${d}</span><small></small>`;
+    b.addEventListener('click', () => placeDigit(d, notesMode));
+    numpadEl.appendChild(b);
+    numBtns.push(b);
+  }
+
+  // ---------- rendering ----------
+  function computeConflicts() {
+    const set = new Set();
+    for (let i = 0; i < 81; i++) {
+      const v = S.values[i];
+      if (!v) continue;
+      for (const j of PEERS[i]) if (S.values[j] === v) { set.add(i); break; }
+    }
+    return set;
+  }
+
+  function fmtTime(sec) {
+    const h = (sec / 3600) | 0, m = ((sec % 3600) / 60) | 0, s = sec % 60;
+    const mm = String(m).padStart(2, '0'), ss = String(s).padStart(2, '0');
+    return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+  }
+
+  function render() {
+    if (!S) return;
+    const sv = sel >= 0 ? S.values[sel] : 0;
+    const conflicts = settings.errorMode === 'conflict' ? computeConflicts() : null;
+
+    for (let i = 0; i < 81; i++) {
+      const el = cells[i];
+      const v = S.values[i];
+      let cls = el._base;
+      if (S.puzzle[i]) cls += ' given'; else if (v) cls += ' user';
+      if (i === sel) cls += ' selected';
+      else if (settings.highlightSame && sv && v === sv) cls += ' same';
+      else if (sel >= 0 && settings.highlightRelated && PEER_SET[sel].has(i)) cls += ' related';
+      if (conflicts && conflicts.has(i)) cls += S.puzzle[i] ? ' conflict' : ' error';
+      if (settings.errorMode === 'error' && v && !S.puzzle[i] && v !== S.solution[i]) cls += ' error';
+      if (fx.has(i)) cls += ' ' + fx.get(i);
+      if (el.className !== cls) el.className = cls;
+
+      let html;
+      if (v) {
+        html = `<span class="v">${v}</span>`;
+      } else if (S.notes[i]) {
+        html = '<div class="notes">';
+        for (let d = 1; d <= 9; d++) {
+          const on = S.notes[i] & (1 << d);
+          const hl = on && settings.highlightSame && d === sv;
+          html += `<span${hl ? ' class="hl"' : ''}>${on ? d : ''}</span>`;
+        }
+        html += '</div>';
+      } else {
+        html = '';
+      }
+      if (el._html !== html) { el.innerHTML = html; el._html = html; }
+      el.setAttribute('aria-label', `${rowOf(i) + 1}행 ${colOf(i) + 1}열 ${v || '빈칸'}`);
+    }
+
+    // number pad: remaining count per digit
+    const counts = new Array(10).fill(0);
+    for (let i = 0; i < 81; i++) {
+      const v = S.values[i];
+      if (v && (settings.errorMode !== 'error' || v === S.solution[i])) counts[v]++;
+    }
+    numBtns.forEach((b, k) => {
+      const left = 9 - counts[k + 1];
+      b.querySelector('small').textContent = left > 0 ? left : '';
+      b.disabled = left <= 0 || !canAct();
+    });
+    numpadEl.classList.toggle('notes-mode', notesMode);
+
+    $('#notesBtn').classList.toggle('on', notesMode);
+    $('#notesState').textContent = notesMode ? 'ON' : 'OFF';
+    $('#hintCount').textContent = S.hints;
+    $('#hintBtn').disabled = S.hints <= 0 || !canAct();
+    $('#undoBtn').disabled = !S.history.length || !canAct();
+    $('#eraseBtn').disabled = !canAct();
+    $('#diffLabel').textContent = DIFFS[S.diff].label;
+    const soundBtn = $('#soundBtn');
+    soundBtn.classList.toggle('muted', !settings.sound);
+    soundBtn.setAttribute('aria-pressed', String(settings.sound));
+
+    const mEl = $('#mistakes');
+    if (settings.errorMode === 'error') {
+      mEl.textContent = settings.mistakeLimit ? `실수 ${S.mistakes}/${MAX_MISTAKES}` : `실수 ${S.mistakes}`;
+      mEl.classList.toggle('warn', settings.mistakeLimit && S.mistakes >= MAX_MISTAKES - 1);
+    } else {
+      mEl.textContent = '';
+    }
+    $('#timer').textContent = fmtTime(S.elapsed);
+    $('#pauseBtn').textContent = paused ? '▶' : '❚❚';
+    $('#pauseOverlay').classList.toggle('hidden', !paused);
+    boardEl.classList.toggle('blur', paused);
+  }
+
+  function addFx(indices, cls, ms) {
+    for (const i of indices) fx.set(i, cls);
+    render();
+    setTimeout(() => {
+      for (const i of indices) if (fx.get(i) === cls) fx.delete(i);
+      render();
+    }, ms);
+  }
+
+  // ---------- actions ----------
+  function pushHistory(changes) {
+    S.history.push(changes);
+    if (S.history.length > 500) S.history.shift();
+  }
+
+  function removePeerNotes(i, d, changes) {
+    if (!settings.autoRemoveNotes) return;
+    const bit = 1 << d;
+    for (const j of PEERS[i]) {
+      if (S.notes[j] & bit) { changes.push([j, S.values[j], S.notes[j]]); S.notes[j] &= ~bit; }
+    }
+  }
+
+  function placeDigit(d, asNote) {
+    if (!canAct() || sel < 0) return;
+    const i = sel;
+    if (isLocked(i)) return;
+
+    if (asNote) {
+      if (S.values[i]) return;
+      pushHistory([[i, 0, S.notes[i]]]);
+      S.notes[i] ^= 1 << d;
+      Sound.play('note');
+      save(); render();
+      return;
+    }
+
+    if (S.values[i] === d) return;
+    const changes = [[i, S.values[i], S.notes[i]]];
+    S.values[i] = d;
+    S.notes[i] = 0;
+    removePeerNotes(i, d, changes);
+    pushHistory(changes);
+
+    let completed = false;
+    if (d !== S.solution[i]) {
+      if (settings.errorMode === 'error') {
+        S.mistakes++;
+        addFx([i], 'shake', 400);
+        if (settings.mistakeLimit && S.mistakes >= MAX_MISTAKES) {
+          S.lost = true;
+          Sound.play('lose');
+          save(); render();
+          showLoseModal();
+          return;
+        }
+        Sound.play('error');
+        save(); render();
+        return;
+      }
+    } else {
+      completed = celebrateUnits(i);
+    }
+    save(); render();
+    if (!checkWin()) Sound.play(completed ? 'unit' : 'place');
+  }
+
+  function celebrateUnits(i) {
+    const done = [];
+    for (const u of UNITS) {
+      if (!u.includes(i)) continue;
+      if (u.every((j) => S.values[j] === S.solution[j])) done.push(...u);
+    }
+    if (done.length) addFx([...new Set(done)], 'flash', 750);
+    return done.length > 0;
+  }
+
+  function erase() {
+    if (!canAct() || sel < 0 || isLocked(sel)) return;
+    const i = sel;
+    if (!S.values[i] && !S.notes[i]) return;
+    pushHistory([[i, S.values[i], S.notes[i]]]);
+    S.values[i] = 0;
+    S.notes[i] = 0;
+    Sound.play('erase');
+    save(); render();
+  }
+
+  function undo() {
+    if (!canAct() || !S.history.length) return;
+    const changes = S.history.pop();
+    for (let k = changes.length - 1; k >= 0; k--) {
+      const [i, v, n] = changes[k];
+      if (i < 0) continue; // marker left by the removed auto-notes toggle in older saves
+      S.values[i] = v;
+      S.notes[i] = n;
+    }
+    const cell = changes.find(([i]) => i >= 0);
+    if (cell) sel = cell[0];
+    Sound.play('undo');
+    save(); render();
+  }
+
+  function hint() {
+    if (!canAct() || S.hints <= 0) return;
+    let i = sel;
+    if (i < 0 || S.puzzle[i] || S.values[i] === S.solution[i]) {
+      const open = [];
+      for (let k = 0; k < 81; k++) if (S.values[k] !== S.solution[k]) open.push(k);
+      if (!open.length) return;
+      i = open[(Math.random() * open.length) | 0];
+    }
+    const d = S.solution[i];
+    const changes = [[i, S.values[i], S.notes[i]]];
+    S.values[i] = d;
+    S.notes[i] = 0;
+    removePeerNotes(i, d, changes);
+    pushHistory(changes);
+    S.hints--;
+    sel = i;
+    save(); render();
+    addFx([i], 'flash', 750);
+    const completed = celebrateUnits(i);
+    if (!checkWin()) Sound.play(completed ? 'unit' : 'hint');
+  }
+
+  function checkWin() {
+    for (let i = 0; i < 81; i++) if (S.values[i] !== S.solution[i]) return false;
+    S.done = true;
+    Sound.play('win');
+    const st = stats[S.diff] || (stats[S.diff] = { played: 0, won: 0, best: null });
+    st.won++;
+    const isBest = st.best === null || S.elapsed < st.best;
+    if (isBest) st.best = S.elapsed;
+    store(STAT_KEY, stats);
+    remove(SAVE_KEY);
+    render();
+    setTimeout(() => showModal({
+      title: '🎉 퍼즐 완성!',
+      body: `<div class="big-time">${fmtTime(S.elapsed)}</div>
+        <p>${DIFFS[S.diff].label} · 실수 ${S.mistakes}회 · 힌트 ${MAX_HINTS - S.hints}회 사용</p>
+        <p>${isBest ? '🏆 최고 기록 달성!' : `최고 기록 ${fmtTime(st.best)}`}</p>`,
+      buttons: [
+        { label: '닫기' },
+        { label: '새 게임', primary: true, onClick: showStart },
+      ],
+    }), 500);
+    return true;
+  }
+
+  function showLoseModal() {
+    showModal({
+      title: '게임 오버',
+      body: `<p>실수를 ${MAX_MISTAKES}번 해서 이번 게임은 끝났어요.</p><p>같은 난이도(${DIFFS[S.diff].label})로 새 게임을 시작하거나 메뉴로 돌아갈 수 있어요.</p>`,
+      buttons: [
+        { label: '메뉴로 돌아가기', onClick: showStart },
+        { label: '새 게임', primary: true, onClick: () => newGame(S.diff) },
+      ],
+    });
+  }
+
+  function hasProgress() {
+    return S && !S.done && !S.lost && S.values.some((v, i) => v && !S.puzzle[i]);
+  }
+
+  // ---------- start screen ----------
+  function renderStart() {
+    $('#diffOptions').innerHTML = Object.keys(DIFFS).map((k) => {
+      const best = stats[k] && stats[k].best !== null ? `최고 ${fmtTime(stats[k].best)}` : '기록 없음';
+      return `<button class="diff-opt" role="radio" data-diff="${k}" aria-checked="${k === chosenDiff}">
+        <strong>${DIFFS[k].label}</strong><small>주어진 숫자 ${DIFFS[k].clues}개 · ${best}</small></button>`;
+    }).join('');
+    const canResume = S && !S.done && !S.lost;
+    const resume = $('#resumeBtn2');
+    resume.hidden = !canResume;
+    if (canResume) resume.textContent = `이어하기 · ${DIFFS[S.diff].label} ${fmtTime(S.elapsed)}`;
+  }
+
+  function showStart() {
+    onStart = true;
+    paused = false;
+    closeModal();
+    if (S) chosenDiff = S.diff;
+    renderStart();
+    $('#gameScreen').hidden = true;
+    $('#startScreen').hidden = false;
+    save();
+  }
+
+  function enterGame() {
+    onStart = false;
+    $('#startScreen').hidden = true;
+    $('#gameScreen').hidden = false;
+    render();
+  }
+
+  function confirmNewGame(diff) {
+    if (hasProgress()) {
+      showModal({
+        title: '새 게임을 시작할까요?',
+        body: '<p>지금 하던 게임은 사라져요.</p>',
+        buttons: [
+          { label: '취소' },
+          { label: '새 게임', primary: true, onClick: () => newGame(diff) },
+        ],
+      });
+      return;
+    }
+    newGame(diff);
+  }
+
+  function newGame(diff) {
+    enterGame();
+    $('#loading').classList.remove('hidden');
+    boardEl.classList.add('blur');
+    setTimeout(() => {
+      const { puzzle, solution } = generate(diff);
+      S = {
+        diff, puzzle, solution,
+        values: puzzle.slice(),
+        notes: new Array(81).fill(0),
+        mistakes: 0, hints: MAX_HINTS, elapsed: 0,
+        history: [], done: false, lost: false,
+      };
+      const st = stats[diff] || (stats[diff] = { played: 0, won: 0, best: null });
+      st.played++;
+      store(STAT_KEY, stats);
+      sel = -1; notesMode = false; paused = false;
+      fx.clear();
+      $('#loading').classList.add('hidden');
+      Sound.play('start');
+      save(); render();
+    }, 30);
+  }
+
+  function togglePause(force) {
+    if (!S || S.done || S.lost) return;
+    paused = typeof force === 'boolean' ? force : !paused;
+    Sound.play('click');
+    render();
+  }
+
+  // ---------- modal / settings ----------
+  const modal = $('#modal');
+  function showModal({ title, body, buttons }) {
+    $('#modalTitle').textContent = title;
+    $('#modalBody').innerHTML = body;
+    const wrap = $('#modalButtons');
+    wrap.innerHTML = '';
+    for (const b of buttons) {
+      const el = document.createElement('button');
+      el.textContent = b.label;
+      if (b.primary) el.className = 'primary';
+      el.addEventListener('click', () => { closeModal(); if (b.onClick) b.onClick(); });
+      wrap.appendChild(el);
+    }
+    modal.classList.remove('hidden');
+    const p = wrap.querySelector('.primary') || wrap.lastChild;
+    if (p) p.focus();
+  }
+  function closeModal() { modal.classList.add('hidden'); }
+  modal.addEventListener('pointerdown', (e) => { if (e.target === modal && S && !S.lost) closeModal(); });
+
+  function applyTheme() {
+    if (settings.theme === 'auto') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.dataset.theme = settings.theme;
+  }
+
+  function openSettings() {
+    const row = (label, control) => `<label class="setting"><span>${label}</span>${control}</label>`;
+    const check = (key) => `<input type="checkbox" data-key="${key}" ${settings[key] ? 'checked' : ''}>`;
+    const statRows = Object.keys(DIFFS).map((k) => {
+      const s = stats[k] || { played: 0, won: 0, best: null };
+      return `<tr><td>${DIFFS[k].label}</td><td>${s.played}</td><td>${s.won}</td><td>${s.best === null ? '–' : fmtTime(s.best)}</td></tr>`;
+    }).join('');
+    showModal({
+      title: '설정',
+      body:
+        row('오류 표시', `<select data-key="errorMode">
+            <option value="error">정답과 비교</option>
+            <option value="conflict">규칙 충돌만</option>
+            <option value="none">표시 안 함</option></select>`) +
+        row('실수 3회 제한', check('mistakeLimit')) +
+        row('같은 숫자 강조', check('highlightSame')) +
+        row('효과음', check('sound')) +
+        row('행·열·박스 강조', check('highlightRelated')) +
+        row('숫자 입력 시 메모 자동 정리', check('autoRemoveNotes')) +
+        row('테마', `<select data-key="theme">
+            <option value="auto">시스템</option>
+            <option value="light">라이트</option>
+            <option value="dark">다크</option></select>`) +
+        `<h2 style="margin-top:20px">기록</h2>
+         <table class="stats"><tr><th>난이도</th><th>플레이</th><th>완료</th><th>최고 기록</th></tr>${statRows}</table>`,
+      buttons: [{ label: '닫기', primary: true }],
+    });
+    const body = $('#modalBody');
+    body.querySelector('[data-key=errorMode]').value = settings.errorMode;
+    body.querySelector('[data-key=theme]').value = settings.theme;
+    body.querySelectorAll('[data-key]').forEach((el) => {
+      el.addEventListener('change', () => {
+        settings[el.dataset.key] = el.type === 'checkbox' ? el.checked : el.value;
+        store(SET_KEY, settings);
+        applyTheme();
+        render();
+      });
+    });
+  }
+
+  // ---------- input wiring ----------
+  $('#homeBtn').addEventListener('click', showStart);
+  $('#newGame').addEventListener('click', () => confirmNewGame(S.diff));
+  $('#diffOptions').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-diff]');
+    if (!b) return;
+    chosenDiff = b.dataset.diff;
+    renderStart();
+  });
+  $('#startBtn').addEventListener('click', () => confirmNewGame(chosenDiff));
+  $('#resumeBtn2').addEventListener('click', enterGame);
+  $('#startSettings').addEventListener('click', openSettings);
+  $('#settingsBtn').addEventListener('click', openSettings);
+  $('#undoBtn').addEventListener('click', undo);
+  $('#eraseBtn').addEventListener('click', erase);
+  $('#notesBtn').addEventListener('click', () => { notesMode = !notesMode; Sound.play('click'); render(); });
+  $('#soundBtn').addEventListener('click', () => {
+    settings.sound = !settings.sound;
+    store(SET_KEY, settings);
+    Sound.play('click');
+    render();
+  });
+  $('#hintBtn').addEventListener('click', hint);
+  $('#pauseBtn').addEventListener('click', () => togglePause());
+  $('#resumeBtn').addEventListener('click', () => togglePause(false));
+
+  document.addEventListener('keydown', (e) => {
+    if (!modal.classList.contains('hidden')) {
+      if (e.key === 'Escape' && S && !S.lost) closeModal();
+      return;
+    }
+    if (e.target.tagName === 'SELECT' || !S || onStart) return;
+    const key = e.key.toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && key === 'z') { e.preventDefault(); undo(); return; }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+    const m = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
+    if (m) { e.preventDefault(); placeDigit(+m[1], notesMode !== e.shiftKey); return; }
+
+    const moves = { arrowup: -9, w: -9, arrowdown: 9, s: 9, arrowleft: -1, a: -1, arrowright: 1, d: 1 };
+    if (key in moves) {
+      e.preventDefault();
+      if (paused) return;
+      if (sel < 0) { sel = 40; render(); return; }
+      const r = rowOf(sel), c = colOf(sel), dlt = moves[key];
+      if (dlt === -9) sel = ((r + 8) % 9) * 9 + c;
+      else if (dlt === 9) sel = ((r + 1) % 9) * 9 + c;
+      else if (dlt === -1) sel = r * 9 + (c + 8) % 9;
+      else sel = r * 9 + (c + 1) % 9;
+      Sound.play('select');
+      render();
+      return;
+    }
+    if (key === 'backspace' || key === 'delete' || key === '0') { e.preventDefault(); erase(); return; }
+    if (key === 'n') { notesMode = !notesMode; Sound.play('click'); render(); return; }
+    if (key === 'p') { togglePause(); return; }
+    if (key === 'escape') { sel = -1; render(); }
+  });
+
+  // ---------- timer ----------
+  setInterval(() => {
+    if (!canAct() || document.hidden) return;
+    S.elapsed++;
+    $('#timer').textContent = fmtTime(S.elapsed);
+    if (S.elapsed % 5 === 0) save();
+  }, 1000);
+  window.addEventListener('beforeunload', save);
+
+  // ---------- boot ----------
+  applyTheme();
+  const saved = load(SAVE_KEY);
+  if (saved && Array.isArray(saved.values) && saved.values.length === 81 && !saved.done && DIFFS[saved.diff]) {
+    S = saved;
+  }
+  showStart();
+})();
+</script>
+</body>
+</html>
